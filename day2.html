@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2: Gift Shop</title>
+</head>
+<body>
+
+    <h2>Introduce las rotaciones:</h2>
+
+    <input type="text" id="rotaciones" size="60" placeholder="Ej: 10-20, 100-200">
+    <br><br>
+
+    <button onclick="calcular()">Calcular password</button>
+
+    <h3 id="resultado"></h3>
+
+<script>
+        function sumFirstN(n) {
+            return n * (n + 1) / 2;
+        }
+        function sumRange(min, max) {
+            if (max < min) return 0;
+            return sumFirstN(max) - sumFirstN(min - 1);
+        }
+
+        // Suma de todos los inválidos de longitud 'length' en [lo, hi]
+        function sumInvalidByLength(lo, hi, length) {
+            // descartar longitudes impares
+            if (length % 2 === 1) return 0;
+
+            const halfLen = length / 2;
+            const loHalf = 10 ** (halfLen - 1); // mínimo patrón (sin cero inicial)
+            const hiHalf = 10 * loHalf - 1;     // máximo patrón (todos 9s)
+
+            let minH, maxH;
+
+            // mínimo patrón tal que patrón*(10^halfLen + 1) >= lo
+            if (length > String(lo).length) {
+                minH = loHalf;
+            } else {
+                minH = Math.floor(lo / (loHalf * 10));
+                if (minH * (10 * loHalf + 1) < lo) minH += 1;
+                minH = Math.max(minH, loHalf);
+            }
+
+            // máximo patrón tal que patrón*(10^halfLen + 1) <= hi
+            if (length < String(hi).length) {
+                maxH = hiHalf;
+            } else {
+                maxH = Math.floor(hi / (loHalf * 10));
+                if (maxH * (10 * loHalf + 1) > hi) maxH -= 1;
+                maxH = Math.min(maxH, hiHalf);
+            }
+
+            if (minH > maxH) return 0;
+
+            // suma de patrones * factor (101, 10001, etc.)
+            return sumRange(minH, maxH) * (10 * loHalf + 1);
+        }
+
+        function calcular() {
+            const input = document.getElementById('rotaciones').value.trim();
+            if (!input) {
+                document.getElementById('resultado').textContent = 'Introduce los rangos.';
+                return;
+            }
+
+            const ranges = input.split(',').map(s => s.trim()).filter(Boolean);
+
+            let totalSum = 0;
+
+            for (const r of ranges) {
+                const [startStr, endStr] = r.split('-').map(s => s.trim());
+                const lo = Number(startStr);
+                const hi = Number(endStr);
+                if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo > hi) continue;
+
+                for (let length = String(lo).length; length <= String(hi).length; length++) {
+                    totalSum += sumInvalidByLength(lo, hi, length);
+                }
+            }
+
+            document.getElementById('resultado').textContent =
+                `Suma de IDs inválidos: ${totalSum}`;
+        }
+
+        // Ejemplo del prompt: 1161-7913 debería sumar usando patrones 12..78 con factor 101 entre longitudes 4
+        // Puedes probar pegando: "1161-7913" en el input y pulsando Calcular.
+    </script>
+
+</body>
+</html>
